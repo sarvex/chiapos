@@ -71,15 +71,14 @@ def pollSpace():
     global pollDisk
     global pollMem
 
-    tempdirpath = os.getcwd() + "/" + tempdir
-    print("Temporary directory path is " + tempdirpath)
+    tempdirpath = f"{os.getcwd()}/{tempdir}"
+    print(f"Temporary directory path is {tempdirpath}")
     used = 0
     while bPollSpace:
         try:
             used = get_size(tempdirpath)
         except FileNotFoundError:
             print("A temp file was deleted while polling the temp directory. Skipping.")
-            pass
         if used > pollDisk:
             pollDisk = used
 
@@ -96,31 +95,13 @@ def pollSpace():
 def run_ProofOfSpace(k_size, threads, disable_bitfield):
     if os.path.isfile("./ProofOfSpace"):
         global bPollSpace
-        bPollSpace = True
         plot_out = ""
         out = ""
-        if disable_bitfield:
-            e = " -e"
-        else:
-            e = ""
+        e = " -e" if disable_bitfield else ""
         threading.Thread(target=pollSpace).start()
         start = time.time()
         print(f"Starting ProofOfSpace create -k {k_size}")
-        cmd = (
-            "exec ./ProofOfSpace create -k "
-            + k_size
-            + " -r "
-            + threads
-            + " -b 4608"
-            + " -u 64"
-            + e
-            + " -t "
-            + tempdir
-            + " -2 "
-            + finaldir
-            + " -d "
-            + finaldir
-        )
+        cmd = f"exec ./ProofOfSpace create -k {k_size} -r {threads} -b 4608 -u 64{e} -t {tempdir} -2 {finaldir} -d {finaldir}"
         print("cmd is ", cmd, "\n")
         try:
             pro = subprocess.Popen(
@@ -142,27 +123,27 @@ def run_ProofOfSpace(k_size, threads, disable_bitfield):
             return plot_out
         except Exception as e:
             plot_out += "Error running: "
-            plot_out += str(e)
+            plot_out += e
             return plot_out
         print(f"Finished k={k_size}", flush=True)
         end = time.time()
+        bPollSpace = True
         bPollSpace = False
         plot_out += "\nTotal time for ProofOfSpace: " + str(end - start) + " seconds\n"
         gigabytes = pollDisk / 1024 ** 3
-        plot_out += "Total temp space used: " + str(gigabytes) + " GiB\n"
+        plot_out += f"Total temp space used: {str(gigabytes)}" + " GiB\n"
         megabytes = pollMem / 1024 ** 2
-        plot_out += "Memory used: " + str(megabytes) + " MiB\n"
+        plot_out += f"Memory used: {str(megabytes)}" + " MiB\n"
         try:
             plot_out += (
-                "Total plot size: "
-                + str(os.path.getsize(finaldir + "/plot.dat") / 1024 ** 3)
+                f'Total plot size: {str(os.path.getsize(f"{finaldir}/plot.dat") / 1024**3)}'
                 + " GiB\n\n"
             )
         except Exception as e:
-            plot_out += "Total plot size: error" + str(e)
+            plot_out += f"Total plot size: error{e}"
         start = time.time()
         print("Checking plot\n", flush=True)
-        cmd = "exec ./ProofOfSpace check -f " + finaldir + "/plot.dat 100"
+        cmd = f"exec ./ProofOfSpace check -f {finaldir}/plot.dat 100"
         try:
             pro = subprocess.Popen(
                 cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
@@ -181,15 +162,16 @@ def run_ProofOfSpace(k_size, threads, disable_bitfield):
             return out
         except Exception as e:
             out += "Error running: "
-            out += str(e)
+            out += e
             return out
         print("Finished checking plot", flush=True)
         end = time.time()
-        out += "Run Output: " + out_script.decode() + "\n"
+        out += f"Run Output: {out_script.decode()}" + "\n"
         if len(err) > 1:
-            out += "Run Errors: " + err.decode() + "\n"
+            out += f"Run Errors: {err.decode()}" + "\n"
         out += (
-            "Total time for check with 100 proofs: " + str(end - start) + " seconds\n"
+            f"Total time for check with 100 proofs: {str(end - start)}"
+            + " seconds\n"
         )
         out += plot_out
     else:

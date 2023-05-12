@@ -107,7 +107,7 @@ class TestPythonBindings(unittest.TestCase):
             # Read and update hash string value in blocks of 4K
             for byte_block in iter(lambda: f.read(4096), b""):
                 sha256_plot_hash.update(byte_block)
-            plot_hash = str(sha256_plot_hash.hexdigest())
+            plot_hash = sha256_plot_hash.hexdigest()
         assert (
             plot_hash
             == "80e32f560f3a4347760d6baae8d16fbaf484948088bff05c51bdcc24b7bc40d9"
@@ -120,7 +120,7 @@ class TestPythonBindings(unittest.TestCase):
         if Path("myplotbad.dat").exists():
             Path("myplotbad.dat").unlink()
 
-        plot_id: bytes = bytes([i for i in range(32, 64)])
+        plot_id: bytes = bytes(list(range(32, 64)))
         pl = DiskPlotter()
         pl.create_plot_disk(
             ".",
@@ -136,17 +136,14 @@ class TestPythonBindings(unittest.TestCase):
             8,
             False,
         )
-        f = open("myplot.dat", "rb")
-        all_data = bytearray(f.read())
-        f.close()
+        with open("myplot.dat", "rb") as f:
+            all_data = bytearray(f.read())
         assert len(all_data) > 20000000
         all_data_bad = (
             all_data[:20000000] + bytearray(token_bytes(10000)) + all_data[20100000:]
         )
-        f_bad = open("myplotbad.dat", "wb")
-        f_bad.write(all_data_bad)
-        f_bad.close()
-
+        with open("myplotbad.dat", "wb") as f_bad:
+            f_bad.write(all_data_bad)
         pr = DiskProver(str(Path("myplotbad.dat")))
 
         iterations: int = 50000
@@ -198,7 +195,7 @@ class TestPythonBindings(unittest.TestCase):
         with self.assertRaises(ValueError):
             DiskProver.from_bytes(bytes())
         with self.assertRaises(ValueError):
-            DiskProver.from_bytes(serialized[0:int(len(serialized)/2)])
+            DiskProver.from_bytes(serialized[:len(serialized) // 2])
 
 
 if __name__ == "__main__":

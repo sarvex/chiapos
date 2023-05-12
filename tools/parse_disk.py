@@ -1,7 +1,7 @@
 import sys
 
 f = open(sys.argv[1], 'r')
-print('opening %s' % sys.argv[1])
+print(f'opening {sys.argv[1]}')
 
 stats = {}
 
@@ -19,14 +19,14 @@ for l in f:
 
 	f = int(f.strip())
 	name = filenames[f]
-	if not name in stats:
+	if name not in stats:
 		stats[name] = {'total_write':0, 'total_read':0}
 
-	if rw == '1':
-		stats[name]['total_write'] += int(size)
-	elif rw == '0':
+	if rw == '0':
 		stats[name]['total_read'] += int(size)
 
+	elif rw == '1':
+		stats[name]['total_write'] += int(size)
 log = sorted(stats.items(), key=lambda x: x[0])
 
 total_read = 0
